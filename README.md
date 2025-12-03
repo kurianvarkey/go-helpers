@@ -26,7 +26,7 @@ import (
 	"log"
 	"time"	
 
-	"github.com/kurianvarkey/go-helpers/logs" 
+	"github.com/kurianvarkey/go-helpers/helpers" 
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
     status := "ACTIVE"
 
     // 1. Log the query
-    boundSQL := logs.GetBoundSQL(sql, userID, loginThreshold, status)
+    boundSQL := helpers.GetBoundSQL(sql, userID, loginThreshold, status)
     log.Printf("[DEBUG] Executing SQL: %s", boundSQL)
 
     // 2. Execute the query (SECURELY)
