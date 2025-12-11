@@ -10,6 +10,7 @@ func TestLogBoundSQL(t *testing.T) {
 	testTime, _ := time.Parse(time.RFC3339, "2025-11-28T14:30:00Z")
 
 	// --- Test Cases ---
+	name := "Alice O'Brien"
 	tests := []struct {
 		name     string
 		query    string
@@ -19,7 +20,7 @@ func TestLogBoundSQL(t *testing.T) {
 		{
 			name:     "Standard Select with String and Int",
 			query:    "SELECT * FROM users WHERE id = $1 AND name = $2",
-			args:     []any{123, "Alice O'Brien"},                                      // Note the single quote in the name
+			args:     []any{123, name},                                                 // Note the single quote in the name
 			expected: "SELECT * FROM users WHERE id = 123 AND name = 'Alice O''Brien'", // Should be escaped
 		},
 		{
@@ -45,6 +46,12 @@ func TestLogBoundSQL(t *testing.T) {
 			query:    "SELECT count(*) FROM items",
 			args:     nil,
 			expected: "SELECT count(*) FROM items",
+		},
+		{
+			name:     "With Pointer",
+			query:    "SELECT * FROM users WHERE name = $1",
+			args:     []any{&name},                                        // Note the single quote in the name
+			expected: "SELECT * FROM users WHERE name = 'Alice O''Brien'", // Should be escaped
 		},
 	}
 
