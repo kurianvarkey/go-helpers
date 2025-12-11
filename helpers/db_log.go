@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -38,24 +39,34 @@ func formatArgForSQL(arg any) string {
 		return "NULL"
 	}
 
-	switch v := arg.(type) {
+	v := reflect.ValueOf(arg)
+	for v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return "NULL" // Pointer is nil
+		}
+		v = v.Elem() // Dereference the pointer
+	}
+	// v now holds the concrete (non-pointer) value
+	unwrappedArg := v.Interface()
+
+	switch val := unwrappedArg.(type) {
 	case string:
 		// Escape single quotes and wrap in quotes for SQL string literal
-		escaped := strings.ReplaceAll(v, "'", "''")
+		escaped := strings.ReplaceAll(val, "'", "''")
 		return fmt.Sprintf("'%s'", escaped)
 	case int, int8, int16, int32, int64,
 		uint, uint8, uint16, uint32, uint64, float32, float64:
 		// Numbers are safe
-		return fmt.Sprintf("%v", v)
+		return fmt.Sprintf("%v", val)
 	case bool:
 		// Booleans
-		return fmt.Sprintf("%t", v)
+		return fmt.Sprintf("%t", val)
 	case time.Time:
 		// Check if the time is UTC or has a fixed offset.
 		// If not, convert it to UTC first to guarantee the 'Z' suffix is accurate.
-		t := v
-		if v.Location().String() != "UTC" {
-			t = v.In(time.UTC)
+		t := val
+		if val.Location().String() != "UTC" {
+			t = val.In(time.UTC)
 		}
 
 		// Format the time using the custom layout
